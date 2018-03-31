@@ -1,3 +1,6 @@
+# my private key
+decryption/id_rsa
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
