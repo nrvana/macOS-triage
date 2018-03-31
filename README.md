@@ -11,7 +11,7 @@ These instructions will get you a copy of the project up and running on your loc
 There are a few basic dependencies for macOS triage. Ideally you would not want to install any additional programs on a target system. Eventually I will have a method to build a single executable which will be all that is needed for collection.
 
 ```
-pip install -r requirements
+pip install -r requirements.txt
 ```
 
 ### Triage
