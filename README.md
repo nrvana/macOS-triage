@@ -59,6 +59,11 @@ To decrypt and encrypted package, perform the following steps:
 python decryption/collection_package_decryptor.py -k <private key> -f <encrypted collection package>
 ```
 
+## TODO
+
+* ability to package triage script into a single binary with all dependencies and config information
+* integrate with https://github.com/wrmsr/pmem/tree/master/OSXPMem
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
