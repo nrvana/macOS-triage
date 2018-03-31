@@ -61,7 +61,7 @@ python decryption/collection_package_decryptor.py -k <private key> -f <encrypted
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details
 
 ## Acknowledgments
 
