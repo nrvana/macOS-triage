@@ -40,15 +40,18 @@ To make your own public/private key pair follow the example in a python console 
 
 ```
 >>> from Crypto.PublicKey import RSA
+>>> random_generator = Random.new().read
 >>> key = RSA.generate(2048, random_generator)
 >>> print key.exportKey()
 -----BEGIN RSA PRIVATE KEY-----
 ...
 -----END RSA PRIVATE KEY-----
 # save this entire output to a file in a safe place for decryption later
->>> key.publickey().exportKey()
-'-----BEGIN PUBLIC KEY----- ... -----END PUBLIC KEY-----'
-# copy this line into the rsa_public_key variable in the Triage class (note that print was not used in the public key output and should only be on one line.)
+>>> print key.publickey().exportKey()
+-----BEGIN PUBLIC KEY-----
+...
+-----END PUBLIC KEY-----
+# save this entire output to a file named 'id_rsa.pub' in the root of the script directory
 ```
 
 ## .enc Package Decryption

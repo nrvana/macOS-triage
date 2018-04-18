@@ -1017,3 +1017,12 @@ supported_os: [Darwin]
         - ['/var/db/uuidtext']
   labels: [UAL]
   supported_os: [Sierra]
+  ---
+    name: SSHKnownHosts
+    doc: SSH Known Hosts
+    sources:
+    - type: FILE
+      attributes:
+        paths: ['%%users.homedir%%/.ssh/known_hosts']
+    labels: [Users, SSH]
+    supported_os: [Darwin]

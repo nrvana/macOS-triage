@@ -1,6 +1,7 @@
 altgraph==0.15
 macholib==1.9
 modulegraph==0.16
+psutil==5.4.5
 py2app==0.14
 pyaml==17.12.1
 pycrypto==2.6.1

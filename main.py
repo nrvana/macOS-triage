@@ -18,6 +18,9 @@ import struct
 import atexit
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
+import psutil
+import json
+import pickle
 
 # notes for feature improvement TODOs
 # * integrate with https://github.com/wrmsr/pmem/tree/master/OSXPMem
@@ -30,31 +33,33 @@ class Triage():
 
         # default collection items
         self.triage_items = dict()
-        self.triage_items["user_mru"] = True
-        self.triage_items["unified_audit_log"] = True
-        self.triage_items["log_files"] = True
-        self.triage_items["persistence"] = True
-        self.triage_items["mdls_recurse"] = True
-        self.triage_items["volatile"] = False
-        self.triage_items["browser_artifacts"] = True
-        self.triage_items["im_artifacts"] = True
-        self.triage_items["ios_artifacts"] = True
-        self.triage_items["mail_artifacts"] = True
-        self.triage_items["external_media"] = True
-        self.triage_items["user_artifacts"] = True
-        self.triage_items["system_artifacts"] = True
+        self.triage_items["user_mru"] = False
+        self.triage_items["unified_audit_log"] = False
+        self.triage_items["log_files"] = False
+        self.triage_items["persistence"] = False
+        self.triage_items["mdls_recurse"] = False
+        self.triage_items["volatile"] = True
+        self.triage_items["browser_artifacts"] = False
+        self.triage_items["im_artifacts"] = False
+        self.triage_items["ios_artifacts"] = False
+        self.triage_items["mail_artifacts"] = False
+        self.triage_items["external_media"] = False
+        self.triage_items["user_artifacts"] = False
+        self.triage_items["system_artifacts"] = False
 
         self.target = target
         self.user_mode = user_mode
         self.encrypt = encrypt
 
         self.live_triage = True
-        self.rsa_public_key = '-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAv65A9iiP58jsheiR4ESJ\n3yYr3L5WKpDaDCpjbsq6Ac3cg7Hnpb/nrcw6V/OEPWfrovZ7A+CmTBlQuKr5rrJw\n8QMAZwE3bCD1yK1etXeAwJAnIAxYrxP9hHzd0kcv6mvRkwXcORtoZcz+rolkUkOP\nlfuOEM2zh7l4BOHTVSodxUtaevxnfOK14T9yp3qNLQGknUopJ5v0jG7rwft73zyB\nLV7rF2MVAB/u9XU8kwRGn/QPeyZ+dSzXEunow8BeZ6lDJ0Ndo2jycyN4fItitvaP\nPoM7Gfw/zU/Q53JbplqHB/+hr9TUZ3AK3px8HVZckuzQtGPdQ49DTHzIae52xm7p\nrQIDAQAB\n-----END PUBLIC KEY-----'
+        self.key_file = 'id_rsa.pub'
+        self.load_rsa_public_key()
+
         self.collection_time = int(time.time())
         self.collection_dir = output_location + '/{}.collection'.format(self.collection_time)
         self.logger.info("Making collection staging directory.")
         os.makedirs(self.collection_dir)
-        self.artifact_yaml_file = "20180320-macOS-artifacts.yaml"
+        self.artifact_yaml_file = "artifacts/20180320-macOS-artifacts.yaml"
         self.load_artifact_yaml_file()
 
         self.logger.info('Performing triage with the following options:')
@@ -66,6 +71,15 @@ class Triage():
     ##########################################
 
     # PRE-COLLECTION
+    def load_rsa_public_key(self):
+        self.logger.info("Reading public key for encryption.")
+        try:
+            with open(self.key_file,  'r') as f:
+                self.rsa_public_key = f.read()
+        except:
+            self.logger.critical("Could not open public key file. Exiting.")
+            sys.exit(1)
+
     def load_artifact_yaml_file(self):
         try:
             yaml_artifacts = yaml.load_all(open(self.artifact_yaml_file, 'r'))
@@ -183,11 +197,43 @@ class Triage():
     # NON STANDARD COLLECTION FUNCTIONS
     ##########################################
     def collect_volatile(self):
-        os.popen('netstat -an').read()
-        os.popen('ps aux').read()
-        os.popen('w').read()
-        # fix this cmd
-        os.popen('cat /Users/*/.ssh/known_hosts').read()
+        ps_list = list()
+        open_files = list()
+        for p in psutil.pids():
+            ps_list.append(psutil.Process(p).as_dict())
+            try:
+                for f in psutil.Process(p).open_files():
+                        tmp = f._asdict()
+                        tmp['pid'] = p
+                        open_files.append(json.dumps(tmp))
+            except psutil._exceptions.AccessDenied as e:
+                self.logger.error("Psutil error: {}".format(e))
+        self.output_volatile('ps_list', ps_list)
+        self.output_volatile('open_files', open_files)
+        try:
+            self.output_volatile('net_connections', psutil.net_connections())
+        except psutil._exceptions.AccessDenied as e:
+            self.logger.error("Psutil error: {}".format(e))
+        self.output_volatile('users', psutil.users())
+        self.output_volatile('net_if_addrs', psutil.net_if_addrs())
+        self.output_volatile('disk_partitions', psutil.disk_partitions())
+        disk_usage = list()
+        for disk in psutil.disk_partitions():
+            disk_usage.append(json.dumps(psutil.disk_usage(disk.mountpoint)._asdict()))
+        self.output_volatile('disk_usage', disk_usage)
+        self.output_volatile('uptime', os.popen('uptime').read())
+
+    def output_volatile(self, command, output):
+        volatile_collection_dir = os.path.join(self.collection_dir, 'volatile_output')
+        volatile_collection_path = os.path.join(volatile_collection_dir, command)
+        if os.path.exists(volatile_collection_dir):
+            self.logger.debug("Directory exists for {}, skipping directory creation.".format(volatile_collection_dir))
+        else:
+            self.logger.info("Making a new collection directory for {}.".format(volatile_collection_dir))
+            os.makedirs(volatile_collection_dir)
+
+        with open(volatile_collection_path, 'wb') as f:
+            pickle.dump(output, f)
 
     def collect_ual(self):
         if self.is_root:

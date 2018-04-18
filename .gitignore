@@ -1,5 +1,8 @@
-# my private key
+# my rsa keys
+id_rsa.pub
 decryption/id_rsa
+
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -8,7 +8,7 @@ Usage:
 from setuptools import setup
 
 APP = ['main.py']
-DATA_FILES = []
+DATA_FILES = ['artifacts/20180413-macOS-artifacts.yaml', 'id_rsa.pub']
 OPTIONS = {}
 
 setup(
