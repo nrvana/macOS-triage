@@ -1,26 +1,56 @@
 #!/usr/bin/env python
+"""
+macOS triage is a python script to collect various macOS logs, artifacts, and other data.
+
+Copyright (c) 2018 nrvana
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+"""
+
+__author__ = "nrvana"
+__credits__ = ["Brian Marks", "Dan O'Day", "@pstirparo"]
+__license__ = "MIT"
+__version__ = "0.2"
+
 
 # import ConfigParser
 import argparse
+import atexit
+import base64
+import glob
+import hashlib
+import json
+import logging
+import os
+import pickle
+import random
+import shutil
+import struct
 import sys
 import tarfile
-import os
-import exceptions
-import logging
-import shutil
-import glob
 import time
-import yaml
-import hashlib
-import base64
-import random
-import struct
-import atexit
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import AES
+
 import psutil
-import json
-import pickle
+import yaml
+from Crypto.Cipher import AES
+from Crypto.PublicKey import RSA
+
 
 # notes for feature improvement TODOs
 # * integrate with https://github.com/wrmsr/pmem/tree/master/OSXPMem
