@@ -67,5 +67,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 
 * This project is indebted to the work of [@pstirparo](https://github.com/pstirparo) in the 
 [mac4n6](https://github.com/pstirparo/mac4n6) project for the OSX artifact yaml file and for making it available under
-the available under the 
-[Creative Commons Attribution-ShareAlike 2.5 Generic (CC BY-SA 2.5) license](http://creativecommons.org/licenses/by-sa/2.5/).
+the [Creative Commons Attribution-ShareAlike 2.5 Generic (CC BY-SA 2.5) license](http://creativecommons.org/licenses/by-sa/2.5/).
