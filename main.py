@@ -57,7 +57,6 @@ from Crypto.PublicKey import RSA
 
 class Triage():
     def __init__(self, target, encrypt, user_mode, output_location):
-
         logging.basicConfig(level=logging.ERROR)
         self.logger = logging.getLogger(__name__)
 
@@ -319,7 +318,6 @@ class Triage():
             os.makedirs(mdls_collection_path)
         os.system('mdls -plist "{}" "{}"'.format(mdls_collection_path + '/' + tgtfile + '.mdls.plist',  mdls_tgt_path))
 
-
     def md5_program_folders(self):
         pass
 
@@ -397,14 +395,15 @@ class Triage():
                 outfile.write(collection_key)
         os.remove(in_filename)
 
-def main():
 
+def main():
+    # add/parse arguments
     argument_parser = argparse.ArgumentParser(
         description=u'Triage script to collect artifacts from a live macOS system or mounted macOS image.')
 
     argument_parser.add_argument(
         u'--plaintext', dest=u'encrypt', action=u'store_false', default=True,
-        help=u'Flag to turn of collection package encryption. Encryption requires rsa_public_key in Triage class init method.')
+        help=u'Flag to turn off collection package encryption. Encryption requires rsa_public_key in Triage class init method.')
 
     argument_parser.add_argument(
         u'-u', u'--user-mode', dest=u'user_mode', action=u'store_true', default=False,
@@ -412,24 +411,25 @@ def main():
 
     argument_parser.add_argument(
         u'-t', u'--target', dest=u'target', action=u'store', type=str,
-        default="/", help=u'Target volume to run triage. Use \'/\' for live system or \'/Volume/<name>\' for a mounted volume.\
-        Default option is love system.')
+        default="/", help=u'Target volume to run triage. Use \'/\' for live system or \'/Volume/<name>\' (path) for a mounted volume. \
+        Default option is live system.')
 
     argument_parser.add_argument(
         u'-o', u'--output', dest=u'output_location', action=u'store', type=str, default='.',
-        help=u'Specify an output location other than the current working directory.')
+        help=u'Specify an output location (default is the current working directory).')
 
     options = argument_parser.parse_args()
 
-    t = Triage(options.target, options.encrypt, options.user_mode, options.output_location)
+    # t = Triage(options.target, options.encrypt, options.user_mode, options.output_location)
 
-    @atexit.register
-    def exit_handler():
-        if os.path.exists(t.collection_dir):
-            t.logger.info("Cleaing up collection directory {}.".format(t.collection_dir))
-            shutil.rmtree(t.collection_dir)
+    # @atexit.register
+    # def exit_handler():
+    #     if os.path.exists(t.collection_dir):
+    #         t.logger.info("Cleaning up collection directory {}.".format(t.collection_dir))
+    #         shutil.rmtree(t.collection_dir)
 
-    t.perform_triage()
+    # t.perform_triage()
+
 
 if __name__ == "__main__":
     main()
