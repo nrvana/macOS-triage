@@ -61,20 +61,21 @@ class Triage():
         self.logger = logging.getLogger(__name__)
 
         # default collection items
-        self.triage_items = dict()
-        self.triage_items["user_mru"] = False
-        self.triage_items["unified_audit_log"] = False
-        self.triage_items["log_files"] = False
-        self.triage_items["persistence"] = False
-        self.triage_items["mdls_recurse"] = False
-        self.triage_items["volatile"] = True
-        self.triage_items["browser_artifacts"] = False
-        self.triage_items["im_artifacts"] = False
-        self.triage_items["ios_artifacts"] = False
-        self.triage_items["mail_artifacts"] = False
-        self.triage_items["external_media"] = False
-        self.triage_items["user_artifacts"] = False
-        self.triage_items["system_artifacts"] = False
+        self.triage_items = {
+            "user_mru":             True,
+            "unified_audit_log":    True,
+            "log_files":            True,
+            "persistence":          True,
+            "mdls_recurse":         True,
+            "volatile":             True,
+            "browser_artifacts":    True,
+            "im_artifacts":         True,
+            "ios_artifacts":        True,
+            "mail_artifacts":       True,
+            "external_media":       True,
+            "user_artifacts":       True,
+            "system_artifacts":     True
+        }
 
         self.target = target
         self.user_mode = user_mode
