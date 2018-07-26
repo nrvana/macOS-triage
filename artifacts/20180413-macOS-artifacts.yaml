@@ -1066,3 +1066,13 @@ labels: [System, Users]
 supported_os: [Sierra]
 urls: ['https://github.com/dlcowen/FSEventsParser']
 ---
+name: BashSessions
+doc: Bash Sessions
+sources:
+- type: DIRECTORY
+  attributes:
+    paths: ['%%users.homedir%%/.bash_sessions']
+labels: [Users, MRU]
+supported_os: [Sierra]
+urls: ['https://www.swiftforensics.com/2018/05/bash-sessions-in-macos.html']
+---
