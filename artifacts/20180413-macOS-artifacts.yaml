@@ -1056,3 +1056,13 @@ labels: [Users, MRU]
 supported_os: [Sierra]
 urls: ['https://github.com/ydkhatri/spotlight_parser']
 ---
+name: FSEventsd
+doc: FSEventsd
+sources:
+- type: DIRECTORY
+  attributes:
+    paths: ['/.fseventsd/']
+labels: [System, Users]
+supported_os: [Sierra]
+urls: ['https://github.com/dlcowen/FSEventsParser']
+---
