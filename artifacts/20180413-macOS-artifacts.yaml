@@ -1046,4 +1046,13 @@ labels: [Users, Software, MRU]
 supported_os: [Sierra]
 urls: ['https://www.crowdstrike.com/blog/i-know-what-you-did-last-month-a-new-artifact-of-execution-on-macos-10-13/']
 ---
-  
+name: SpotlightDatabase
+doc: Spotlight Database
+sources:
+- type: DIRECTORY
+  attributes:
+    paths: ['/.Spotlight-V100/Store-V2/*']
+labels: [Users, MRU]
+supported_os: [Sierra]
+urls: ['https://github.com/ydkhatri/spotlight_parser']
+---
