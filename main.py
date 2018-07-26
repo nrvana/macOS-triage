@@ -29,7 +29,6 @@ __license__ = "MIT"
 __version__ = "0.2"
 
 
-# import ConfigParser
 import argparse
 import atexit
 import base64
@@ -52,8 +51,9 @@ from Crypto.Cipher import AES
 from Crypto.PublicKey import RSA
 
 
-# notes for feature improvement TODOs
-# * integrate with https://github.com/wrmsr/pmem/tree/master/OSXPMem
+# thinking about modularizing a few parts of this.. TBD
+from lib import pre-collection
+
 
 class Triage():
     def __init__(self, target, encrypt, user_mode, output_location):
@@ -63,19 +63,27 @@ class Triage():
 
         # default collection items
         self.triage_items = dict()
-        self.triage_items["user_mru"] = False
-        self.triage_items["unified_audit_log"] = False
-        self.triage_items["log_files"] = False
-        self.triage_items["persistence"] = False
-        self.triage_items["mdls_recurse"] = False
-        self.triage_items["volatile"] = True
-        self.triage_items["browser_artifacts"] = False
-        self.triage_items["im_artifacts"] = False
-        self.triage_items["ios_artifacts"] = False
-        self.triage_items["mail_artifacts"] = False
-        self.triage_items["external_media"] = False
-        self.triage_items["user_artifacts"] = False
-        self.triage_items["system_artifacts"] = False
+        items = ["user_mru","unified_audit_log","log_files","persistence",
+        "mdls_recurse","volatile","browser_artifacts","im_artifacts",
+        "ios_artifacts","mail_artifacts","external_media",
+        "user_artifacts","system_artifacts"]
+
+        for i in items:
+            self.triage_items[i] = True
+
+        # self.triage_items["user_mru"] = False
+        # self.triage_items["unified_audit_log"] = False
+        # self.triage_items["log_files"] = False
+        # self.triage_items["persistence"] = False
+        # self.triage_items["mdls_recurse"] = False
+        # self.triage_items["volatile"] = False
+        # self.triage_items["browser_artifacts"] = False
+        # self.triage_items["im_artifacts"] = False
+        # self.triage_items["ios_artifacts"] = False
+        # self.triage_items["mail_artifacts"] = False
+        # self.triage_items["external_media"] = False
+        # self.triage_items["user_artifacts"] = False
+        # self.triage_items["system_artifacts"] = False
 
         self.target = target
         self.user_mode = user_mode
@@ -110,6 +118,7 @@ class Triage():
             self.logger.critical("Could not open public key file. Exiting.")
             sys.exit(1)
 
+    # PRE-COLLECTION
     def load_artifact_yaml_file(self):
         try:
             yaml_artifacts = yaml.load_all(open(self.artifact_yaml_file, 'r'))
@@ -318,7 +327,6 @@ class Triage():
             self.logger.info("Making a new collection directory for {}.".format(mdls_collection_path))
             os.makedirs(mdls_collection_path)
         os.system('mdls -plist "{}" "{}"'.format(mdls_collection_path + '/' + tgtfile + '.mdls.plist',  mdls_tgt_path))
-
 
     def md5_program_folders(self):
         pass
