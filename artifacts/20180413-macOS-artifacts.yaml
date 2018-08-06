@@ -1076,3 +1076,13 @@ labels: [Users, MRU]
 supported_os: [Sierra]
 urls: ['https://www.swiftforensics.com/2018/05/bash-sessions-in-macos.html']
 ---
+name: knowledgeC-DB
+doc: knowledgeC Database
+sources:
+- type: DIRECTORY
+  attributes:
+    paths: ['/private/var/db/CoreDuet/Knowledge', '%%users.homedir%%/Library/Application Support/Knowledge']
+labels: [System, Users, MRU, Browser]
+supported_os: [Sierra]
+urls: ['https://www.mac4n6.com/blog/2018/8/5/knowledge-is-power-using-the-knowledgecdb-database-on-macos-and-ios-to-determine-precise-user-and-application-usage']
+---
