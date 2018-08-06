@@ -52,7 +52,7 @@ from Crypto.PublicKey import RSA
 
 
 # thinking about modularizing a few parts of this.. TBD
-from lib import pre-collection
+#from lib import pre-collection
 
 
 class Triage():
@@ -337,12 +337,12 @@ class Triage():
     # POST-COLLECTION
     def compress_collection(self):
         self.logger.info("Compressing collection output into tar gzip file.")
-        tar = tarfile.open('{}.collection.tar.gz'.format(self.collection_time), 'w:gz')
-        tar.add('{}.collection'.format(self.collection_time), recursive=True)
+        tar = tarfile.open('{}.tar.gz'.format(self.collection_dir), 'w:gz')
+        tar.add(self.collection_dir, recursive=True)
         tar.close()
 
         self.logger.info("Deleting collection directory.")
-        shutil.rmtree('{}.collection'.format(self.collection_time))
+        shutil.rmtree(self.collection_dir)
 
     # POST-COLLECTION
     class AESCipher(object):
@@ -380,7 +380,7 @@ class Triage():
         pubkey = RSA.importKey(self.rsa_public_key)
         collection_key = pubkey.encrypt(key.encode('hex'), 16)[0]
 
-        in_filename = '{}.collection.tar.gz'.format(self.collection_time)
+        in_filename = '{}.tar.gz'.format(self.collection_dir)
         out_filename = in_filename + '.enc'
 
         iv = ''.join(chr(random.randint(0, 0xFF)) for i in range(16))

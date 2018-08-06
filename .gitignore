@@ -2,8 +2,9 @@
 id_rsa.pub
 decryption/id_rsa
 
-# PyCharm files
+# IDE files
 .idea/
+.vscode/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
