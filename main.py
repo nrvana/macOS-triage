@@ -44,6 +44,7 @@ import struct
 import sys
 import tarfile
 import time
+import hashlib
 
 import psutil
 import yaml
@@ -58,7 +59,7 @@ from Crypto.PublicKey import RSA
 class Triage():
     def __init__(self, target, encrypt, user_mode, output_location):
 
-        logging.basicConfig(level=logging.ERROR)
+        logging.basicConfig(level=logging.WARN)
         self.logger = logging.getLogger(__name__)
 
         # default collection items
@@ -71,19 +72,19 @@ class Triage():
         for i in items:
             self.triage_items[i] = True
 
-        # self.triage_items["user_mru"] = False
-        # self.triage_items["unified_audit_log"] = False
-        # self.triage_items["log_files"] = False
-        # self.triage_items["persistence"] = False
-        # self.triage_items["mdls_recurse"] = False
-        # self.triage_items["volatile"] = False
-        # self.triage_items["browser_artifacts"] = False
-        # self.triage_items["im_artifacts"] = False
-        # self.triage_items["ios_artifacts"] = False
-        # self.triage_items["mail_artifacts"] = False
-        # self.triage_items["external_media"] = False
+        self.triage_items["user_mru"] = False
+        self.triage_items["unified_audit_log"] = False
+        self.triage_items["log_files"] = False
+        self.triage_items["persistence"] = False
+        self.triage_items["mdls_recurse"] = False
+        self.triage_items["volatile"] = False
+        self.triage_items["browser_artifacts"] = False
+        self.triage_items["im_artifacts"] = False
+        self.triage_items["ios_artifacts"] = False
+        self.triage_items["mail_artifacts"] = False
+        self.triage_items["external_media"] = False
         # self.triage_items["user_artifacts"] = False
-        # self.triage_items["system_artifacts"] = False
+        self.triage_items["system_artifacts"] = False
 
         self.target = target
         self.user_mode = user_mode
@@ -97,7 +98,7 @@ class Triage():
         self.collection_dir = output_location + '/{}.collection'.format(self.collection_time)
         self.logger.info("Making collection staging directory.")
         os.makedirs(self.collection_dir)
-        self.artifact_yaml_file = "artifacts/20180320-macOS-artifacts.yaml"
+        self.artifact_yaml_file = "20180413-macOS-artifacts.yaml"
         self.load_artifact_yaml_file()
 
         self.logger.info('Performing triage with the following options:')
@@ -120,6 +121,9 @@ class Triage():
 
     # PRE-COLLECTION
     def load_artifact_yaml_file(self):
+        # needed this workaround for py2app to load yaml file correctly
+        if os.path.exists('artifacts'):
+            self.artifact_yaml_file = os.path.join('artifacts', self.artifact_yaml_file)
         try:
             yaml_artifacts = yaml.load_all(open(self.artifact_yaml_file, 'r'))
         except yaml.YAMLError as e:
@@ -133,7 +137,7 @@ class Triage():
         for a in yaml_artifacts:
             self.artifact_list.append(a)
 
-    # PRE-COLLECTION
+    # PRE-COLLECTIOnormcase
     def determine_live_or_dead(self):
         # if target is the root file system, this is a live triage
         if self.target == "/":
@@ -184,9 +188,10 @@ class Triage():
         if self.triage_items["ios_artifacts"]: self.collect_category("IOS")
         if self.triage_items["mail_artifacts"]: self.collect_category("Mail")
         if self.triage_items["external_media"]: self.collect_category("External Media")
-        if self.triage_items["user_artifacts"]: self.collect_category("User")
+        if self.triage_items["user_artifacts"]: self.collect_category("Users")
         if self.triage_items["system_artifacts"]: self.collect_category("System")
 
+        self.collected_file_sha1()
         self.compress_collection()
 
         if self.rsa_public_key != '' and self.encrypt:
@@ -203,15 +208,15 @@ class Triage():
             # create collection staging directory path for item.
             # collection_subdirectory is used for special cases like unified audit logs and volitile data.
             collection_path = self.collection_dir + collection_subdirectory + os.path.abspath(item)
-            if os.path.exists(collection_path):
+            collection_path_dir = self.collection_dir + collection_subdirectory + os.path.dirname(item)
+            if os.path.exists(collection_path_dir):
                 self.logger.debug("Directory exists for {}, skipping directory creation.".format(item))
             else:
                 self.logger.info("Making a new collection directory for {}.".format(item))
-                os.makedirs(collection_path)
+                os.makedirs(collection_path_dir)
 
             # directory collection
             if os.path.isdir(item):
-                collection_path = self.collection_dir + collection_subdirectory + os.path.abspath(item)
                 self.logger.info("Collecting directory {}".format(item))
                 self._copytree(item, collection_path)
             # file collection
@@ -335,6 +340,18 @@ class Triage():
         pass
 
     # POST-COLLECTION
+    def collected_file_sha1(self):
+        self.logger.info("Creating SHA1 manifest file.")
+        with open(os.path.join(self.collection_dir, 'collection_manifest.sha1'), 'w') as f:
+            for root, dirs,files in os.walk(self.collection_dir, topdown=True):
+                for name in files:
+                    FileName = (os.path.join(root, name))
+                    hasher = hashlib.sha1()
+                    with open(str(FileName), 'rb') as afile:
+                        buf = afile.read()
+                        hasher.update(buf)
+                    f.write("{} SHA1:{}\n".format(os.path.join(root, name), hasher.hexdigest()))
+
     def compress_collection(self):
         self.logger.info("Compressing collection output into tar gzip file.")
         tar = tarfile.open('{}.tar.gz'.format(self.collection_dir), 'w:gz')

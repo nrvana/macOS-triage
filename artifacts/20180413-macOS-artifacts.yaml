@@ -1017,7 +1017,7 @@ supported_os: [Darwin]
         - ['/var/db/uuidtext']
   labels: [UAL]
   supported_os: [Sierra]
-  ---
+---
     name: SSHKnownHosts
     doc: SSH Known Hosts
     sources:
@@ -1085,4 +1085,3 @@ sources:
 labels: [System, Users, MRU, Browser]
 supported_os: [Sierra]
 urls: ['https://www.mac4n6.com/blog/2018/8/5/knowledge-is-power-using-the-knowledgecdb-database-on-macos-and-ios-to-determine-precise-user-and-application-usage']
----
