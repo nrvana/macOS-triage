@@ -98,7 +98,7 @@ class Triage():
         self.collection_dir = output_location + '/{}.collection'.format(self.collection_time)
         self.logger.info("Making collection staging directory.")
         os.makedirs(self.collection_dir)
-        self.artifact_yaml_file = "20180413-macOS-artifacts.yaml"
+        self.artifact_yaml_file = "20180914-macOS-artifacts.yaml"
         self.load_artifact_yaml_file()
 
         self.logger.info('Performing triage with the following options:')
