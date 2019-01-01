@@ -58,13 +58,13 @@ To decrypt an encrypted package, perform the following steps:
 
 As of macOS 10.14 (Mojave), the Terminal app no longer has full disk access. In order to enable it, you must do the following:
 
-[ ] Open **System Preferences** from the Apple menu ()
-[ ] Select **Security & Privacy**
-[ ] Select the **Privacy** tab
-[ ] Select **Full Disk Access** from the left pane
-[ ] Click the plus (+) button to add the Terminal app to the list of apps approved to access the full disk (you likely need to click the lock in the lower lefthand corner and authenticate with administrator privileges to unlock this functionality)
-[ ] Navigate to `/Applications/Utilities/Terminal.app` to add the Terminal app to the list of approved applications
-[ ] Relaunch the Terminal and you will now have full disk access
+- [ ] Open **System Preferences** from the Apple menu ()
+- [ ] Select **Security & Privacy**
+- [ ] Select the **Privacy** tab
+- [ ] Select **Full Disk Access** from the left pane
+- [ ] Click the plus (+) button to add the Terminal app to the list of apps approved to access the full disk (you likely need to click the lock in the lower lefthand corner and authenticate with administrator privileges to unlock this functionality)
+- [ ] Navigate to `/Applications/Utilities/Terminal.app` to add the Terminal app to the list of approved applications
+- [ ] Relaunch the Terminal and you will now have full disk access
 
 The good news is this should be sufficient for full disk access without having to [disable SIP](http://osxdaily.com/2015/10/05/disable-rootless-system-integrity-protection-mac-os-x/) as of macOS 10.4 (Mojave).
 
