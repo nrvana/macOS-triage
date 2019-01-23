@@ -438,7 +438,7 @@ def main():
     argument_parser.add_argument(
         u'-t', u'--target', dest=u'target', action=u'store', type=str,
         default="/", help=u'Target volume to run triage. Use \'/\' for live system or \'/Volume/<name>\' for a mounted volume.\
-        Default option is love system.')
+        Default option is live system.')
 
     argument_parser.add_argument(
         u'-o', u'--output', dest=u'output_location', action=u'store', type=str, default='.',
