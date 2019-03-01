@@ -504,7 +504,10 @@ doc: macOS NotificationCenter database
 sources:
 - type: FILE
   attributes:
-    paths: ['/private/var/folders/[a-z][0-9]/*/0/com.apple.notificationcenter/db2/*']
+    paths: 
+      - ['/private/var/folders/[a-z][0-9]/*/0/com.apple.notificationcenter/db2/db']
+      - ['/private/var/folders/[a-z][0-9]/*/0/com.apple.notificationcenter/db/db']
+      - ['%%users.homedir%%/Library/Application Support/NotificationCenter/*.db']
 labels: [Users, Logs]
 supported_os: [Darwin]
 urls: ['https://objective-see.com/blog/blog_0x2E.html']
