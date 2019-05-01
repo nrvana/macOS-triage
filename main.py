@@ -37,7 +37,6 @@ import hashlib
 import json
 import logging
 import os
-import pickle
 import random
 import shutil
 import struct
@@ -65,25 +64,26 @@ class Triage():
         # default collection items
         self.triage_items = dict()
         items = ["user_mru","unified_audit_log","log_files","persistence",
-        "mdls_recurse","volatile","browser_artifacts","im_artifacts",
+        "mdls_recurse","volatile","hash_binaries","browser_artifacts","im_artifacts",
         "ios_artifacts","mail_artifacts","external_media",
         "user_artifacts","system_artifacts"]
 
         for i in items:
             self.triage_items[i] = True
 
-        self.triage_items["user_mru"] = False
+        self.triage_items["volatile"] = False
+        self.triage_items["hash_binaries"] = False
+        # self.triage_items["user_mru"] = False
         self.triage_items["unified_audit_log"] = False
         self.triage_items["log_files"] = False
-        self.triage_items["persistence"] = False
+        # self.triage_items["persistence"] = False
         self.triage_items["mdls_recurse"] = False
-        self.triage_items["volatile"] = False
         self.triage_items["browser_artifacts"] = False
         self.triage_items["im_artifacts"] = False
         self.triage_items["ios_artifacts"] = False
         self.triage_items["mail_artifacts"] = False
-        self.triage_items["external_media"] = False
-        # self.triage_items["user_artifacts"] = False
+        # self.triage_items["external_media"] = False
+        self.triage_items["user_artifacts"] = False
         self.triage_items["system_artifacts"] = False
 
         self.target = target
@@ -146,20 +146,6 @@ class Triage():
             self.live_triage = False
 
     # COLLECTION
-    def collect_category(self, category):
-        self.logger.debug("Attempting to collect category {}".format(category))
-        for artifact in self.artifact_list:
-            if category in artifact['labels']:
-                for path in artifact['sources'][0]['attributes']['paths']:
-                    try:
-                        if type(path) == list: path = path[0]
-                        self.collect_artifact(path.replace('%%users.homedir%%','/Users/*'))
-                    except IOError as e:
-                        self.logger.error("Could not collect artifact {}: {}".format(path[0], e))
-                    except OSError as e:
-                        self.logger.error("Could not collect artifact {}: {}".format(path[0], e))
-
-    # COLLECTION
     def perform_triage(self):
         self.determine_live_or_dead()
 
@@ -177,12 +163,13 @@ class Triage():
             self.logger.critical('[!] Triage encryption option enabled, but rsa_public_key is empty. Exiting..')
             sys.exit(1)
 
+        if self.triage_items["volatile"]: self.collect_volatile()
+        if self.triage_items["hash_binaries"]: self.hash_binaries()
         if self.triage_items["user_mru"]: self.collect_category("MRU")
         if self.triage_items["unified_audit_log"]: self.collect_ual()
         if self.triage_items["log_files"]: self.collect_category("Logs")
         if self.triage_items["persistence"]: self.collect_category("Autoruns")
         if self.triage_items["mdls_recurse"]: self.mdls_search()
-        if self.triage_items["volatile"]: self.collect_volatile()
         if self.triage_items["browser_artifacts"]: self.collect_category("Browser")
         if self.triage_items["im_artifacts"]: self.collect_category("IM")
         if self.triage_items["ios_artifacts"]: self.collect_category("IOS")
@@ -191,12 +178,23 @@ class Triage():
         if self.triage_items["user_artifacts"]: self.collect_category("Users")
         if self.triage_items["system_artifacts"]: self.collect_category("System")
 
-        self.collected_file_sha1()
+
+        self.collected_file_sha256()
         self.compress_collection()
 
         if self.rsa_public_key != '' and self.encrypt:
             self.logger.info("Encrypting output file.")
             self.encrypt_output()
+
+    # COLLECTION
+    def collect_category(self, category):
+        self.logger.debug("Attempting to collect category {}".format(category))
+        for artifact in self.artifact_list:
+            if category in artifact['labels']:
+                for path in artifact['sources'][0]['attributes']['paths']:
+                    # try:
+                    if type(path) == list: path = path[0]
+                    self.collect_artifact(path.replace('%%users.homedir%%','/Users/*'))
 
     # COLLECTION
     def collect_artifact(self, path, collection_subdirectory=''):
@@ -214,28 +212,30 @@ class Triage():
             else:
                 self.logger.info("Making a new collection directory for {}.".format(item))
                 os.makedirs(collection_path_dir)
-
-            # directory collection
-            if os.path.isdir(item):
-                self.logger.info("Collecting directory {}".format(item))
-                self._copytree(item, collection_path)
-            # file collection
-            else:
-                self.logger.info("Collecting file {}".format(item))
-                shutil.copy2(item, collection_path)
+            try:
+                # directory collection
+                if os.path.isdir(item):
+                    self.logger.info("Collecting directory {}".format(item))
+                    self._copytree(item, collection_path)
+                # file collection
+                else:
+                    self.logger.info("Collecting file {}".format(item))
+                    shutil.copy2(item, collection_path)
+            except IOError as e:
+                # import pdb; pdb.set_trace()
+                self.logger.error("Could not collect artifact {}: {}".format(item, e))
+            except OSError as e:
+                # import pdb; pdb.set_trace()
+                self.logger.error("Could not collect artifact {}: {}".format(item, e))
 
     # COLLECTION
     def _copytree(self, src, dst, symlinks=False, ignore=None):
-        for item in os.listdir(src):
-            s = os.path.join(src, item)
-            d = os.path.join(dst, item)
-            try:
-                if os.path.isdir(s):
-                    shutil.copytree(s, d, symlinks, ignore)
-                else:
-                    shutil.copy2(s, d)
-            except shutil.Error as e:
-                self.logger.error("Copytree error: {}".format(e))
+        # source is directory
+        try:
+            shutil.copytree(src, dst, symlinks, ignore)
+            return
+        except shutil.Error as e:
+            self.logger.error("Copytree error: {}".format(e))
 
     ##########################################
     # NON STANDARD COLLECTION FUNCTIONS
@@ -243,28 +243,44 @@ class Triage():
     def collect_volatile(self):
         ps_list = list()
         open_files = list()
+
         for p in psutil.pids():
-            ps_list.append(psutil.Process(p).as_dict())
             try:
+                ps_list.append(psutil.Process(p).as_dict())
                 for f in psutil.Process(p).open_files():
                         tmp = f._asdict()
                         tmp['pid'] = p
                         open_files.append(json.dumps(tmp))
             except psutil._exceptions.AccessDenied as e:
                 self.logger.error("Psutil error: {}".format(e))
+            except psutil._exceptions.ZombieProcess as e:
+                self.logger.error("Psutil error: {}".format(e))
+            except OSError as e:
+                self.logger.error("Psutil error: {}".format(e))
         self.output_volatile('ps_list', ps_list)
         self.output_volatile('open_files', open_files)
+
         try:
             self.output_volatile('net_connections', psutil.net_connections())
         except psutil._exceptions.AccessDenied as e:
             self.logger.error("Psutil error: {}".format(e))
-        self.output_volatile('users', psutil.users())
+
+        users = list()
+        for u in psutil.users():
+            users.append(json.dumps(u._asdict()))
+        self.output_volatile('users', users)
+
         self.output_volatile('net_if_addrs', psutil.net_if_addrs())
-        self.output_volatile('disk_partitions', psutil.disk_partitions())
+
+        disks = list()
+        for d in psutil.disk_partitions():
+            disks.append(json.dumps(d._asdict()))
+        self.output_volatile('disk_partitions', disks)
         disk_usage = list()
         for disk in psutil.disk_partitions():
             disk_usage.append(json.dumps(psutil.disk_usage(disk.mountpoint)._asdict()))
         self.output_volatile('disk_usage', disk_usage)
+
         self.output_volatile('uptime', os.popen('uptime').read())
 
     def output_volatile(self, command, output):
@@ -277,7 +293,53 @@ class Triage():
             os.makedirs(volatile_collection_dir)
 
         with open(volatile_collection_path, 'wb') as f:
-            pickle.dump(output, f)
+            if isinstance(output, list):
+                for line in output:
+                    f.write(str(line) + "\n")
+            else:
+                f.write(str(output))
+
+    def hash_binaries(self):
+        hash_list = list()
+
+        for p in psutil.pids():
+            try:
+                binary = psutil.Process(p).cmdline()[0]
+                pid = psutil.Process(p).pid
+                name = psutil.Process(p).name()
+                self.logger.info("Hashing process cmdline {}".format(binary))
+                filehash = self.get_sha256_hash(binary)
+                pshash = dict()
+                pshash['name'] = name
+                pshash['pid'] = pid
+                pshash['binary'] = binary
+                pshash['hash'] = filehash
+                hash_list.append(pshash)
+            except psutil._exceptions.AccessDenied as e:
+                self.logger.error("Psutil error: {}".format(e))
+            except psutil._exceptions.ZombieProcess as e:
+                self.logger.error("Psutil error: {}".format(e))
+            except OSError as e:
+                self.logger.error("Psutil error: {}".format(e))
+            except IOError as e:
+                self.logger.error("File not found on disk: {}".format(e))
+            except IndexError as e:
+                self.logger.error("Process does not have a cmdline entry: {}:{}".format(pid, name))
+        
+        self.output_volatile('hash_binaries', hash_list)
+
+    def get_sha256_hash(self, filepath):
+        hasher = hashlib.sha256()
+        BUF_SIZE = 65536
+
+        with open(filepath, 'r') as f:
+            while True:
+                data = f.read(BUF_SIZE)
+                if not data:
+                    break
+                hasher.update(data)
+
+        return hasher.hexdigest()
 
     def collect_ual(self):
         if self.is_root:
@@ -340,17 +402,17 @@ class Triage():
         pass
 
     # POST-COLLECTION
-    def collected_file_sha1(self):
-        self.logger.info("Creating SHA1 manifest file.")
-        with open(os.path.join(self.collection_dir, 'collection_manifest.sha1'), 'w') as f:
+    def collected_file_sha256(self):
+        self.logger.info("Creating SHA256 manifest file.")
+        with open(os.path.join(self.collection_dir, 'collection_manifest.sha256'), 'w') as f:
             for root, dirs,files in os.walk(self.collection_dir, topdown=True):
                 for name in files:
                     FileName = (os.path.join(root, name))
-                    hasher = hashlib.sha1()
+                    hasher = hashlib.sha256()
                     with open(str(FileName), 'rb') as afile:
                         buf = afile.read()
                         hasher.update(buf)
-                    f.write("{} SHA1:{}\n".format(os.path.join(root, name), hasher.hexdigest()))
+                    f.write("{} SHA256:{}\n".format(os.path.join(root, name), hasher.hexdigest()))
 
     def compress_collection(self):
         self.logger.info("Compressing collection output into tar gzip file.")
@@ -451,7 +513,7 @@ def main():
     @atexit.register
     def exit_handler():
         if os.path.exists(t.collection_dir):
-            t.logger.info("Cleaing up collection directory {}.".format(t.collection_dir))
+            t.logger.info("Cleaning up collection directory {}.".format(t.collection_dir))
             shutil.rmtree(t.collection_dir)
 
     t.perform_triage()

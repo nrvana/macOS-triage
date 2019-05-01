@@ -1263,8 +1263,8 @@ sources:
 - type: DIRECTORY
   attributes:
     paths: 
-      - ['/.Spotlight-V100/Store-V2/*']
-      - ['%%users.homedir%%/Library/Metadata/CoreSpotlight/index.spotlightV3/*']
+      - ['/.Spotlight-V100/Store-V2']
+      - ['%%users.homedir%%/Library/Metadata/CoreSpotlight/index.spotlightV3']
 labels: [Users, MRU]
 supported_os: [Sierra]
 urls: ['https://github.com/ydkhatri/spotlight_parser']
@@ -1288,6 +1288,15 @@ sources:
 labels: [Users, MRU]
 supported_os: [Sierra]
 urls: ['https://www.swiftforensics.com/2018/05/bash-sessions-in-macos.html']
+---
+name: BashStartup
+doc: Bash Statrup
+sources:
+- type: FILE
+  attributes:
+    paths: ['%%users.homedir%%/.bash_profile', '%%users.homedir%%/.bashrc', '%%users.homedir%%/.profile']
+labels: [Users]
+supported_os: [Sierra]
 ---
 name: macOSKnowledgeC
 doc: KnowledgeC User and Application usage database
